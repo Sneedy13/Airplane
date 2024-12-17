@@ -22,6 +22,42 @@ def read_flights():
         flights = get_all_flights(session)
         return flights
 
+@app.get("/flights/{flight_id}/bookings/", response_model=list[Booking])
+def read_bookings_for_flight(flight_id: int):
+    with Session(engine) as session:
+        statement = select(Booking).where(Booking.flight_id == flight_id)
+        results = session.exec(statement)
+        return results.all()
+
+@app.delete("/flights/{flight_id}", response_model=dict)
+def delete_flight(flight_id: int):
+    with Session(engine) as session:
+        flight = session.get(Flight, flight_id)
+        if flight is None:
+            raise HTTPException(status_code=404, detail="Flight not found")
+        
+        session.delete(flight)
+        session.commit()
+        return {"detail": "Flight deleted successfully"}
+        
+# Проверка запроса:
+# curl -X PUT "http://127.0.0.1:8000/flights/1" -H "Content-Type: application/json" -d '{"status": "Delayed"}'
+@app.patch("/flights/{flight_id}", response_model=Flight)
+def partial_update_flight(flight_id: int, flight_update: Flight):
+    with Session(engine) as session:
+        flight = session.get(Flight, flight_id)
+        if flight is None:
+            raise HTTPException(status_code=404, detail="Flight not found")
+        
+        flight_data = flight_update.dict(exclude_unset=True)
+        for key, value in flight_data.items():
+            setattr(flight, key, value)
+        
+        session.add(flight)
+        session.commit()
+        session.refresh(flight)
+        return flight
+
 # Проверка запроса:
 # curl -X GET "http://127.0.0.1:8000/passengers/1"
 @app.get("/passengers/{passenger_id}", response_model=Passenger)
@@ -47,3 +83,17 @@ def read_airplanes():
     with Session(engine) as session:
         airplanes = get_airplanes(session)
         return airplanes
+
+
+# Проверка запроса:
+# curl -X DELETE "http://127.0.0.1:8000/bookings/1"
+@app.delete("/bookings/{booking_id}", response_model=dict)
+def delete_booking(booking_id: int):
+    with Session(engine) as session:
+        booking = session.get(Booking, booking_id)
+        if booking is None:
+            raise HTTPException(status_code=404, detail="Booking not found")
+        
+        session.delete(booking)
+        session.commit()
+        return {"detail": "Booking deleted successfully"}
