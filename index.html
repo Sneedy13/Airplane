@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авиакомпания API</title>
+</head>
+<body>
+    <h1>Авиакомпания API</h1>
+    <h2>Получить все рейсы</h2>
+    <button onclick="fetchFlights()">Получить рейсы</button>
+    <pre id="flights"></pre>
+
+    <script>
+        async function fetchFlights() {
+            const response = await fetch('http://127.0.0.1:8000/flights/');
+            const data = await response.json();
+            document.getElementById('flights').innerText = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>
